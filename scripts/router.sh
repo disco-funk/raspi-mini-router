@@ -2,15 +2,15 @@
 set -e
 
 # Interfaces
-WAN_IF="usb0"
-LAN_IF="eth0"
+WAN_IF="enx0e2f08e515f9"
+LAN_IF="end0"
 
 # LAN config
-LAN_IP="192.168.0.1"
-LAN_NET="192.168.0.0/24"
+LAN_IP="172.16.0.1"
+LAN_NET="172.16.0.0/28"
 
 # Toggle: restrict outbound traffic (0 = allow all, 1 = restrict)
-EGRESS_RESTRICT=0
+EGRESS_RESTRICT=1
 
 NFT_CONF="/etc/nftables.conf"
 
@@ -73,18 +73,15 @@ table inet filter {
         iif "$LAN_IF" ip saddr != $LAN_NET drop
 
         # LAN -> WAN (optionally restricted)
-        iif "$LAN_IF" oif "$WAN_IF" ct state new,established,related ${
-            EGRESS_RESTRICT:+ip protocol { tcp, udp, icmp } accept
-        }
-        ${EGRESS_RESTRICT:+
+        iif "$LAN_IF" oif "$WAN_IF" ct state {new,established,related} ${EGRESS_RESTRICT:+ip protocol {tcp,udp,icmp\} accept }
+
         # Example: only allow HTTP/HTTPS/DNS if restricted
-        iif "$LAN_IF" oif "$WAN_IF" tcp dport {80,443} accept
-        iif "$LAN_IF" oif "$WAN_IF" udp dport 53 accept
-        iif "$LAN_IF" oif "$WAN_IF" ip protocol icmp accept
-        }
+        ${EGRESS_RESTRICT:+iif "$LAN_IF" oif "$WAN_IF" tcp dport {80,443\} accept}
+        ${EGRESS_RESTRICT:+iif "$LAN_IF" oif "$WAN_IF" udp dport 53 accept}
+        ${EGRESS_RESTRICT:+iif "$LAN_IF" oif "$WAN_IF" ip protocol icmp accept}
 
         # Allow return traffic
-        iif "$WAN_IF" oif "$LAN_IF" ct state established,related accept
+        iif "$WAN_IF" oif "$LAN_IF" ct state {established,related} accept
     }
 }
 
