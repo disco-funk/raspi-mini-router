@@ -2,7 +2,7 @@
 set -e
 
 # Interfaces
-WAN_IF="enx0e2f08e515f9"
+WAN_IF="enx5a7e8ee3aef7"
 LAN_IF="end0"
 
 # LAN config
@@ -16,7 +16,7 @@ NFT_CONF="/etc/nftables.conf"
 
 echo "[+] Configuring LAN interface..."
 ip addr flush dev "$LAN_IF"
-ip addr add "$LAN_IP/24" dev "$LAN_IF"
+ip addr add "$LAN_IP/28" dev "$LAN_IF"
 ip link set "$LAN_IF" up
 
 echo "[+] Enabling IPv4 forwarding..."
